@@ -799,7 +799,10 @@
     <ClInclude Include="include\libmem\libmem.h" />
     <ClInclude Include="include\libmem\libmem.hpp" />
     <ClInclude Include="include\nlohmann\json.hpp" />
+    <ClInclude Include="src\base.h" />
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\utils\hookmgr.h" />
+    <ClInclude Include="src\utils\vmtmgr.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include=".\include\hl2sdk-css\lib\public\bitmap.lib" />
@@ -852,11 +855,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\base.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\utils\hookmgr.cpp" />
+    <ClCompile Include="src\utils\vmtmgr.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="assets\readme.txt" />
