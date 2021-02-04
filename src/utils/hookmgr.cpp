@@ -14,6 +14,16 @@ HookManager::HookManager(mem_module_t& Module)
 HookManager::~HookManager()
 {
 	this->BaseAddress = (mem_voidptr_t)0;
+
+	for (auto Iterator : this->HookTable)
+	{
+		if (Iterator.second.data)
+		{
+			free(Iterator.second.data);
+			Iterator.second.data = nullptr;
+			Iterator.second.size = 0;
+		}
+	}
 }
 
 mem_bool_t    HookManager::Hook(mem_voidptr_t Source, mem_voidptr_t Dest, mem_size_t Size, mem_detour_t Method)
@@ -23,10 +33,11 @@ mem_bool_t    HookManager::Hook(mem_voidptr_t Source, mem_voidptr_t Dest, mem_si
 	{
 		this->HookTable[Source] = {};
 
-		for (mem_size_t i = 0; i < Size; i++)
-			this->HookTable[Source].push_back(StolenBytes[i]);
+		if (this->HookTable[Source].data)
+			this->HookTable[Source].data;
 
-		free(StolenBytes);
+		this->HookTable[Source].data = StolenBytes;
+		this->HookTable[Source].size = Size;
 
 		return MEM_TRUE;
 	}
@@ -39,35 +50,54 @@ mem_bool_t    HookManager::Hook(mem_uintptr_t Offset, mem_voidptr_t Dest, mem_si
 	return this->Hook((mem_voidptr_t)GET_OFFSET(this->BaseAddress, Offset), Dest, Size, Method);
 }
 
-mem_voidptr_t HookManager::HookTrampoline(mem_voidptr_t Source, mem_voidptr_t Dest, mem_size_t Size, mem_detour_t Method)
+mem_bool_t    HookManager::HookTrampoline(mem_voidptr_t Source, mem_voidptr_t Dest, mem_size_t Size, mem_detour_t Method)
 {
 	mem_voidptr_t Trampoline = (mem_voidptr_t)MEM_BAD;
 	mem_data_t    StolenBytes = nullptr;
+	mem_prot_t    OldProtection = 0;
 
 	if ((Trampoline = mem::in::detour_trampoline(Source, Dest, Size, Method, &StolenBytes)) != (mem_voidptr_t)MEM_BAD)
 	{
 		this->HookTable[Source] = {};
 
-		for (mem_size_t i = 0; i < Size; i++)
-			this->HookTable[Source].push_back(StolenBytes[i]);
+		if (this->HookTable[Source].data)
+			free(this->HookTable[Source].data);
+
+		this->HookTable[Source].data = (mem_data_t)Trampoline;
+		mem::in::protect(this->HookTable[Source].data, Size + mem::in::detour_size(Method), PAGE_EXECUTE_READWRITE, &OldProtection);
 
 		free(StolenBytes);
+
+		return MEM_TRUE;
 	}
 
-	return Trampoline;
+	return MEM_FALSE;
 }
 
-mem_voidptr_t HookManager::HookTrampoline(mem_uintptr_t Offset, mem_voidptr_t Dest, mem_size_t Size, mem_detour_t Method)
+mem_bool_t    HookManager::HookTrampoline(mem_uintptr_t Offset, mem_voidptr_t Dest, mem_size_t Size, mem_detour_t Method)
 {
 	return this->HookTrampoline((mem_voidptr_t)GET_OFFSET(this->BaseAddress, Offset), Dest, Size, Method);
+}
+
+mem_voidptr_t HookManager::GetOriginal(mem_voidptr_t Source)
+{
+	DWORD OldProtection = 0;
+	HookEntry StolenBytes = this->HookTable[Source];
+	mem_voidptr_t Original = StolenBytes.data;
+	return Original;
+}
+
+mem_voidptr_t HookManager::GetOriginal(mem_uintptr_t Offset)
+{
+	return this->GetOriginal((mem_voidptr_t)GET_OFFSET(this->BaseAddress, Offset));
 }
 
 mem_bool_t    HookManager::Restore(mem_voidptr_t Source)
 {
 	mem_bool_t Check = MEM_FALSE;
 
-	std::vector<mem_byte_t>& StolenBytes = this->HookTable[Source];
-	Check = mem::in::detour_restore(Source, StolenBytes.data(), StolenBytes.size());
+	HookEntry StolenBytes = this->HookTable[Source];
+	Check = mem::in::detour_restore(Source, StolenBytes.data, StolenBytes.size);
 
 	return Check;
 }

@@ -9,8 +9,14 @@ DWORD WINAPI EntryThread(LPVOID lpReserved)
 
 DWORD WINAPI ExitThread(LPVOID lpReserved)
 {
-	Base::Shutdown();
-	return TRUE;
+	if (Base::Data::Loaded)
+	{
+		Base::Shutdown();
+		FreeLibraryAndExitThread((HMODULE)lpReserved, 0);
+		Base::Data::Loaded = false;
+	}
+
+	return 0;
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
