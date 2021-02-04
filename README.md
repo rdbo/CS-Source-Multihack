@@ -1,7 +1,8 @@
-# Counter-Strike: Source Base
-CS:S Base with Full SDK  
-Modified version of: https://github.com/alliedmodders/hl2sdk/tree/css  
+# Counter-Strike: Source - Multihack
+CS:S Multihack  
+Based on: https://github.com/rdbo/CS-Source-Base  
   
 # How to use?
 Open the solution  
-Compile as Debug/Release x86  
+Compile as Release x86  
+Inject the DLL 'CS-Source-Multihack.dll' at 'build/Win32/Release' into the game  
