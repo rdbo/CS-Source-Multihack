@@ -8,17 +8,16 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 	if (uMsg == WM_KEYDOWN || uMsg == WM_KEYUP)
 	{
 		Data::WmKeys[(int)wParam] = uMsg == WM_KEYDOWN;
-		switch ((int)wParam)
+
+		switch (wParam)
 		{
 		case Settings::Keys::Menu:
-			if(Data::WmKeys[(int)wParam])
+			if (Data::WmKeys[(int)wParam])
 				Settings::ShowMenu = !Settings::ShowMenu;
 			break;
 		case Settings::Keys::Unload:
-			if(Data::WmKeys[(int)wParam])
+			if (Data::WmKeys[(int)wParam])
 				Base::Unload();
-			break;
-		default:
 			break;
 		}
 	}
@@ -46,9 +45,11 @@ LRESULT CALLBACK Base::Hooks::WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
 	case WM_CHAR:
 	case WM_SETCURSOR:
 	case WM_DEVICECHANGE:
-		ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
-		if(Settings::ShowMenu)
+		if (Settings::ShowMenu)
+		{
+			ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
 			return true;
+		}
 	default:
 		break;
 	}

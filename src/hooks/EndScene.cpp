@@ -7,21 +7,23 @@ HRESULT __stdcall Base::Hooks::EndScene(IDirect3DDevice9* thisptr)
 {
 	if (!bInit)
 	{
+		if (!Data::d3d9_dev)
+			Data::d3d9_dev = thisptr;
+
 		D3DDEVICE_CREATION_PARAMETERS d3dpp = {};
-		thisptr->GetCreationParameters(&d3dpp);
+		Data::d3d9_dev->GetCreationParameters(&d3dpp);
 
 		if (!Data::window)
 			Data::window = std::make_unique<WindowData>(d3dpp.hFocusWindow);
 
-		if (!Data::d3d9dev)
-			Data::d3d9dev = thisptr;
-
+		//WndProc Hook
 		if (!Data::oWndProc)
 			Data::oWndProc = (WNDPROC)SetWindowLongPtr(Data::window->GetHandle(), GWL_WNDPROC, (LONG)Hooks::WndProc);
 
+		//Init ImGui
 		ImGui::CreateContext();
 		ImGui_ImplWin32_Init(Data::window->GetHandle());
-		ImGui_ImplDX9_Init(Data::d3d9dev);
+		ImGui_ImplDX9_Init(Data::d3d9_dev);
 
 		bInit = true;
 	}
@@ -32,7 +34,8 @@ HRESULT __stdcall Base::Hooks::EndScene(IDirect3DDevice9* thisptr)
 
 	if (Settings::ShowMenu)
 	{
-		ImGui::Begin("ImGui Window");
+		ImGui::Begin("Counter-Strike: Source - Multihack by rdbo");
+		ImGui::Checkbox("Bunnyhop", &Settings::EnableBunnyhop);
 		ImGui::End();
 	}
 
@@ -40,6 +43,5 @@ HRESULT __stdcall Base::Hooks::EndScene(IDirect3DDevice9* thisptr)
 	ImGui::Render();
 	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 
-	mem_voidptr_t oEndScene = Data::d3d9hk->GetOriginal(Data::d3d9dummy->GetFunction(ifnEndScene));
-	return reinterpret_cast<HRESULT(__stdcall*)(IDirect3DDevice9*)>(oEndScene)(thisptr);
+	return reinterpret_cast<HRESULT(__stdcall*)(IDirect3DDevice9*)>(Data::d3d9_hook->GetOriginal(Data::d3d9_dummy->GetFunction(ifnEndScene)))(thisptr);
 }

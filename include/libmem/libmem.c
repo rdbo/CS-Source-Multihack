@@ -139,7 +139,7 @@ mem_module_t       mem_in_get_module(mem_tstring_t module_ref)
 	hModule = GetModuleHandle(module_ref);
 	if (!hModule || hModule == INVALID_HANDLE_VALUE) return mod;
 	GetModuleInformation(GetCurrentProcess(), hModule, &mod_info, sizeof(mod_info));
-	CloseHandle(hModule);
+	//CloseHandle(hModule);
 
 	mod.base = (mem_voidptr_t)mod_info.lpBaseOfDll;
 	mod.size = (mem_size_t)mod_info.SizeOfImage;
@@ -226,7 +226,7 @@ mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t* pmodu
 		if (!*pmodule_path) return read_chars;
 		mem_in_set(*pmodule_path, 0x0, path_size);
 		read_chars = (mem_size_t)GetModuleFileName(hModule, *pmodule_path, MEM_PATH_MAX);
-		CloseHandle(hModule);
+		//CloseHandle(hModule);
 	}
 #	elif MEM_OS == MEM_LINUX
 	read_chars = mem_ex_get_module_path(mem_in_get_process(), mod, pmodule_path);
@@ -716,7 +716,7 @@ mem_module_t       mem_in_load_module(mem_tstring_t path)
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
 	{
 		mod = mem_in_get_module(path);
-		CloseHandle(hModule);
+		//CloseHandle(hModule);
 	}
 
 #	elif MEM_OS == MEM_LINUX
@@ -777,7 +777,7 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol)
 	{
 		addr = (mem_voidptr_t)GetProcAddress(hModule, symbol);
 		if (!addr) addr = (mem_voidptr_t)MEM_BAD;
-		CloseHandle(hModule);
+		//CloseHandle(hModule);
 	}
 #	elif MEM_OS == MEM_LINUX
 	mem_tstring_t mod_path = (mem_tstring_t)NULL;
@@ -839,7 +839,7 @@ mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 
 		}
 	}
-	CloseHandle(hSnap);
+	//CloseHandle(hSnap);
 #	elif MEM_OS == MEM_LINUX
 	DIR* pdir = opendir("/proc");
 	if (!pdir) return pid;
@@ -944,7 +944,7 @@ mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pproces
 	}
 
 	read_chars = GetModuleFileNameEx(hProcess, NULL, *pprocess_path, MEM_PATH_MAX);
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 
 #	elif MEM_OS == MEM_LINUX
 	char path[64] = { 0 };
@@ -1023,7 +1023,7 @@ mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return arch;
 	BOOL Check = IsWow64Process(hProcess, &IsWow64);
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 	if (!Check) return arch;
 
 	mem_arch_t sys_arch = mem_ex_get_system_arch();
@@ -1116,7 +1116,7 @@ mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
 
 		}
 	}
-	CloseHandle(hSnap);
+	//CloseHandle(hSnap);
 #	elif MEM_OS == MEM_LINUX
 	DIR* pdir = opendir("/proc");
 	if (!pdir)
@@ -1665,7 +1665,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return page;
 	MEMORY_BASIC_INFORMATION mbi = { 0 };
 	VirtualQueryEx(hProcess, src, &mbi, sizeof(mbi));
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 	page.base = mbi.BaseAddress;
 	page.size = mbi.RegionSize;
 	page.end = (mem_voidptr_t)((mem_uintptr_t)page.base + page.size);
@@ -1810,7 +1810,7 @@ mem_bool_t         mem_ex_is_process_running(mem_process_t process)
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	DWORD ExitCode = 0;
 	GetExitCodeProcess(hProcess, &ExitCode);
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 	ret = ExitCode == STILL_ACTIVE ? MEM_TRUE : MEM_FALSE;
 #	elif MEM_OS == MEM_LINUX
 	struct stat sb;
@@ -1841,7 +1841,7 @@ mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voi
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	ret = ReadProcessMemory(hProcess, (LPCVOID)src, (LPVOID)dst, (SIZE_T)size, NULL) != 0 ? MEM_TRUE : MEM_FALSE;
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	struct iovec iosrc = { 0 };
 	struct iovec iodst = { 0 };
@@ -1873,7 +1873,7 @@ mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_vo
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	ret = WriteProcessMemory(hProcess, dst, (LPCVOID)src, size, NULL) != 0 ? MEM_TRUE : MEM_FALSE;
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	struct iovec iosrc = { 0 };
 	struct iovec iodst = { 0 };
@@ -2019,7 +2019,7 @@ mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_
 	DWORD old_prot = 0;
 	ret = VirtualProtectEx(hProcess, src, size, protection, &old_prot) != 0 ? MEM_TRUE : MEM_FALSE;
 	if (old_protection) *old_protection = old_prot;
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	if (old_protection)
 	{
@@ -2053,7 +2053,7 @@ mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_p
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return alloc;
 	alloc = (mem_voidptr_t)VirtualAllocEx(hProcess, NULL, size, MEM_COMMIT | MEM_RESERVE, protection);
 	if (!alloc) alloc = (mem_voidptr_t)MEM_BAD;
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	mem_int_t syscall_n = -1;
 	switch (process.arch)
@@ -2095,7 +2095,7 @@ mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, m
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	ret = VirtualFreeEx(hProcess, src, 0, MEM_RELEASE) != 0 ? MEM_TRUE : MEM_FALSE;
-	CloseHandle(hProcess);
+	//CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	ret = mem_ex_syscall(process, __NR_munmap, src, (mem_voidptr_t)size, NULL, NULL, NULL, NULL) != (mem_voidptr_t)MAP_FAILED ? MEM_TRUE : MEM_FALSE;
 #	endif
@@ -2190,6 +2190,99 @@ mem_voidptr_t      mem_ex_pattern_scan(mem_process_t process, mem_data_t pattern
 	}
 
 	return ret;
+}
+
+mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
+{
+	/*
+	 * Description:
+	 *   Loads the module from
+	 *   'path' into the
+	 *   process 'process'
+	 *
+	 * Return Value:
+	 *   Returns information about
+	 *   the loaded module or a
+	 *   'mem_module_t' filled with
+	 *   invalid values on error
+	 */
+
+	mem_module_t mod = { 0 };
+
+#	if   MEM_OS == MEM_WIN
+	mem_size_t path_size = (MEM_STR_LEN(path) + 1) * sizeof(mem_tchar_t);
+	mem_voidptr_t path_buffer_ex = mem_ex_allocate(process, path_size, PAGE_EXECUTE_READWRITE);
+	if (path_buffer_ex == (mem_voidptr_t)MEM_BAD) return mod;
+	mem_ex_set(process, path_buffer_ex, 0x0, path_size);
+	mem_ex_write(process, path_buffer_ex, path, path_size);
+
+	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
+	if (!hProcess)
+	{
+		mem_ex_deallocate(process, path_buffer_ex, path_size);
+		return mod;
+	}
+
+	HANDLE hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, NULL, (LPTHREAD_START_ROUTINE)LoadLibrary, path_buffer_ex, NULL, NULL);
+	if(!hThread)
+	{
+		mem_ex_deallocate(process, path_buffer_ex, path_size);
+		return mod;
+	}
+
+	WaitForSingleObject(hThread, -1);
+	//CloseHandle(hThread);
+	//CloseHandle(hProcess);
+
+	mem_ex_deallocate(process, path_buffer_ex, path_size);
+
+	mod = mem_ex_get_module(process, path);
+
+#	elif MEM_OS == MEM_LINUX
+#	endif
+
+	return mod;
+}
+
+mem_bool_t         mem_ex_unload_module(mem_process_t process, mem_module_t mod)
+{
+	/*
+	 * Description:
+	 *   Unloads the module from
+	 *   'path' into the
+	 *   process 'process'
+	 *
+	 * Return Value:
+	 *   Returns 'MEM_TRUE' on success
+	 *   or 'MEM_FALSE' on error
+	 */
+
+	mem_bool_t ret = MEM_FALSE;
+#	if   MEM_OS == MEM_WIN
+#	elif MEM_OS == MEM_LINUX
+#	endif
+
+	return ret;
+}
+
+mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_module_t mod, mem_cstring_t symbol)
+{
+	/*
+	 * Description:
+	 *  Gets the address of the symbol 'symbol'
+	 *  of the module 'mod' on the process 'process'
+	 *
+	 * Return Value:
+	 *   Returns the address of the symbol
+	 *   or 'MEM_BAD' on error
+	 */
+
+	mem_voidptr_t sym = (mem_voidptr_t)MEM_BAD;
+#	if   MEM_OS == MEM_WIN
+#	elif MEM_OS == MEM_LINUX
+
+	return sym;
+#	endif
 }
 
 #endif //MEM_COMPATIBLE
