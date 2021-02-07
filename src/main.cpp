@@ -9,10 +9,11 @@ DWORD WINAPI EntryThread(LPVOID lpReserved)
 
 DWORD WINAPI ExitThread(LPVOID lpReserved)
 {
-	if (Base::Data::IsLoaded)
+	if (Base::Data::hModule)
 	{
-		Base::Shutdown();
-		FreeLibraryAndExitThread(Base::Data::hModule, 0);
+		HMODULE hModule = Base::Data::hModule;
+		Base::Data::hModule = (HMODULE)NULL;
+		FreeLibraryAndExitThread(hModule, 0);
 	}
 
 	return TRUE;
@@ -25,7 +26,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD dwReason, LPVOID lpReserved)
 	case DLL_THREAD_ATTACH:  break;
 	case DLL_THREAD_DETACH:  break;
 	case DLL_PROCESS_ATTACH: CreateThread(nullptr, 0, EntryThread, hModule, 0, nullptr); break;
-	case DLL_PROCESS_DETACH: Base::Unload(); break;
+	case DLL_PROCESS_DETACH: Base::Shutdown();  break;
 	}
 
 	return TRUE;

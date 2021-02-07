@@ -10,28 +10,31 @@
 #ifdef MEM_COMPATIBLE
 
  //Data
-#if   MEM_ARCH == MEM_x86_32
-static const mem_payload_t g_mem_payloads[] = {
-	{ (mem_data_t)"\xE9\x00\x00\x00\x00",             5 },                  //x86_JMP32
-	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xE0",     7 },                  //x86_JMP64
-	{ (mem_data_t)"\xE8\x00\x00\x00\x00",             5 },                  //x86_CALL32
-	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xD0",     7 },                  //x86_CALL64
-	{ (mem_data_t)NULL,                               0 },                  //DetourInvalid
-	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90", 8 },                  //x86 INT80 (x86_32 Syscall)
-	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90", 8 },                  //x86 Syscall
+#if   MEM_ARCH == _MEM_ARCH_x86_32
+static const mem_payload_t g_mem_payloads[MEM_ASM_INVALID] = {
+	{ (mem_data_t)"\xE9\x00\x00\x00\x00",             5 },                  //MEM_ASM_x86_JMP32
+	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xE0",     7 },                  //MEM_ASM_x86_JMP64
+	{ (mem_data_t)"\xE8\x00\x00\x00\x00",             5 },                  //MEM_ASM_x86_CALL32
+	{ (mem_data_t)"\xB8\x00\x00\x00\x00\xFF\xD0",     7 },                  //MEM_ASM_x86_CALL64
+	{ (mem_data_t)NULL,                               0 },                  //MEM_ASM_DETOUR_INVALID
+	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90", 8 },                  //MEM_ASM_x86_SYSCALL32
+	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90", 8 },                  //MEM_ASM_x86_SYSCALL64
 };
-#elif MEM_ARCH == MEM_x86_64
-static const mem_payload_t g_mem_payloads[] = {
-	{ (mem_data_t)"\xE9\x00\x00\x00\x00", 5 },                              //x86_JMP32
-	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xE0", 12 }, //x86_JMP64
-	{ (mem_data_t)"\xE8\x00\x00\x00\x00", 5 },                              //x86_CALL32
-	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xD0", 12 }, //x86_CALL64
+#elif MEM_ARCH == _MEM_ARCH_x86_64
+static const mem_payload_t g_mem_payloads[MEM_ASM_INVALID] = {
+	{ (mem_data_t)"\xE9\x00\x00\x00\x00", 5 },                              //MEM_ASM_x86_JMP32
+	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xE0", 12 }, //MEM_ASM_x86_JMP64
+	{ (mem_data_t)"\xE8\x00\x00\x00\x00", 5 },                              //MEM_ASM_x86_CALL32
+	{ (mem_data_t)"\x48\xB8\x00\x00\x00\x00\x00\x00\x00\x00\xFF\xD0", 12 }, //MEM_ASM_x86_CALL64
+	{ (mem_data_t)NULL,                               0 },                  //MEM_ASM_DETOUR_INVALID
+	{ (mem_data_t)"\xCD\x80\x90\x90\x90\x90\x90\x90", 8 },                  //MEM_ASM_x86_SYSCALL32
+	{ (mem_data_t)"\x0F\x05\x90\x90\x90\x90\x90\x90", 8 },                  //MEM_ASM_x86_SYSCALL64
 };
 #endif
 
 //mem_in
 
-mem_pid_t          mem_in_get_pid()
+mem_pid_t          mem_in_get_pid(mem_void_t)
 {
 	/*
 	 * Description:
@@ -79,7 +82,7 @@ mem_size_t         mem_in_get_process_path(mem_tstring_t* pprocess_path)
 	return mem_ex_get_process_path(mem_in_get_pid(),  pprocess_path);
 }
 
-mem_arch_t         mem_in_get_arch()
+mem_arch_t         mem_in_get_arch(mem_void_t)
 {
 	/*
 	 * Description:
@@ -89,7 +92,7 @@ mem_arch_t         mem_in_get_arch()
 	 * Return Value:
 	 *   Returns the architecture
 	 *   of the caller process or
-	 *   'ArchUnknown' if the
+	 *   'MEM_ARCH_UNKNOWN' if the
 	 *   architecture is not
 	 *   recognized
 	 */
@@ -97,7 +100,7 @@ mem_arch_t         mem_in_get_arch()
 	return (mem_arch_t)MEM_ARCH;
 }
 
-mem_process_t      mem_in_get_process()
+mem_process_t      mem_in_get_process(mem_void_t)
 {
 	/*
 	 * Description:
@@ -139,7 +142,6 @@ mem_module_t       mem_in_get_module(mem_tstring_t module_ref)
 	hModule = GetModuleHandle(module_ref);
 	if (!hModule || hModule == INVALID_HANDLE_VALUE) return mod;
 	GetModuleInformation(GetCurrentProcess(), hModule, &mod_info, sizeof(mod_info));
-	//CloseHandle(hModule);
 
 	mod.base = (mem_voidptr_t)mod_info.lpBaseOfDll;
 	mod.size = (mem_size_t)mod_info.SizeOfImage;
@@ -226,7 +228,6 @@ mem_size_t         mem_in_get_module_path(mem_module_t mod, mem_tstring_t* pmodu
 		if (!*pmodule_path) return read_chars;
 		mem_in_set(*pmodule_path, 0x0, path_size);
 		read_chars = (mem_size_t)GetModuleFileName(hModule, *pmodule_path, MEM_PATH_MAX);
-		//CloseHandle(hModule);
 	}
 #	elif MEM_OS == MEM_LINUX
 	read_chars = mem_ex_get_module_path(mem_in_get_process(), mod, pmodule_path);
@@ -512,7 +513,7 @@ mem_voidptr_t      mem_in_pattern_scan(mem_data_t pattern, mem_tstring_t mask, m
 	return ret;
 }
 
-mem_size_t         mem_in_detour_size(mem_detour_t method)
+mem_size_t         mem_in_detour_size(mem_asm_t method)
 {
 	/*
 	 * Description:
@@ -525,13 +526,32 @@ mem_size_t         mem_in_detour_size(mem_detour_t method)
 
 	mem_size_t size = (mem_size_t)MEM_BAD;
 
-	if (method < DetourInvalid)
+	if (method >= 0 && method < MEM_ASM_DETOUR_INVALID)
+		size = mem_in_payload_size(method);
+
+	return size;
+}
+
+mem_size_t         mem_in_payload_size(mem_asm_t method)
+{
+	/*
+	 * Description:
+	 *   Gets the size of the payload 'method'
+	 *
+	 * Return Value:
+	 *   Returns the size of the payload 'method'
+	 *   or 'MEM_BAD' on error
+	 */
+
+	mem_size_t size = (mem_size_t)MEM_BAD;
+
+	if (method >= 0 && method < MEM_ASM_INVALID)
 		size = g_mem_payloads[method].size;
 
 	return size;
 }
 
-mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_data_t* stolen_bytes)
+mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t* stolen_bytes)
 {
 	/*
 	 * Description:
@@ -572,37 +592,37 @@ mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_
 	if (!detour_buffer) return ret;
 	mem_in_read((mem_voidptr_t)g_mem_payloads[method].payload, detour_buffer, detour_size);
 
-#	if   MEM_ARCH == MEM_x86_32
+#	if   MEM_ARCH == _MEM_ARCH_x86_32
 	switch (method)
 	{
-	case x86_JMP32:
+	case MEM_ASM_x86_JMP32:
 		*(mem_voidptr_t*)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
-	case x86_JMP64:
+	case MEM_ASM_x86_JMP64:
 		*(mem_voidptr_t*)(&detour_buffer[1]) = dst;
 		break;
-	case x86_CALL32:
+	case MEM_ASM_x86_CALL32:
 		*(mem_voidptr_t*)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
-	case x86_CALL64:
+	case MEM_ASM_x86_CALL64:
 		*(mem_voidptr_t*)(&detour_buffer[1]) = dst;
 		break;
 	default:
 		break;
 	}
-#	elif MEM_ARCH == MEM_x86_64
+#	elif MEM_ARCH == _MEM_ARCH_x86_64
 	switch (method)
 	{
-	case x86_JMP32:
+	case MEM_ASM_x86_JMP32:
 		*(mem_voidptr_t*)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
-	case x86_JMP64:
+	case MEM_ASM_x86_JMP64:
 		*(mem_voidptr_t*)(&detour_buffer[2]) = dst;
 		break;
-	case x86_CALL32:
+	case MEM_ASM_x86_CALL32:
 		*(mem_voidptr_t*)(&detour_buffer[1]) = (mem_voidptr_t)((mem_uintptr_t)dst - (mem_uintptr_t)src - detour_size);
 		break;
-	case x86_CALL64:
+	case MEM_ASM_x86_CALL64:
 		*(mem_voidptr_t*)(&detour_buffer[2]) = dst;
 		break;
 	default:
@@ -617,7 +637,7 @@ mem_bool_t         mem_in_detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_
 	return ret;
 }
 
-mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method, mem_data_t* stolen_bytes)
+mem_voidptr_t      mem_in_detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method, mem_data_t* stolen_bytes)
 {
 	/*
 	 * Description:
@@ -714,10 +734,7 @@ mem_module_t       mem_in_load_module(mem_tstring_t path)
 #	if   MEM_OS == MEM_WIN
 	HMODULE hModule = LoadLibrary(path);
 	if (hModule && hModule != INVALID_HANDLE_VALUE)
-	{
 		mod = mem_in_get_module(path);
-		//CloseHandle(hModule);
-	}
 
 #	elif MEM_OS == MEM_LINUX
 	if (dlopen(path, RTLD_LAZY))
@@ -777,7 +794,6 @@ mem_voidptr_t      mem_in_get_symbol(mem_module_t mod, mem_cstring_t symbol)
 	{
 		addr = (mem_voidptr_t)GetProcAddress(hModule, symbol);
 		if (!addr) addr = (mem_voidptr_t)MEM_BAD;
-		//CloseHandle(hModule);
 	}
 #	elif MEM_OS == MEM_LINUX
 	mem_tstring_t mod_path = (mem_tstring_t)NULL;
@@ -839,7 +855,7 @@ mem_pid_t          mem_ex_get_pid(mem_tstring_t process_ref)
 
 		}
 	}
-	//CloseHandle(hSnap);
+	CloseHandle(hSnap);
 #	elif MEM_OS == MEM_LINUX
 	DIR* pdir = opendir("/proc");
 	if (!pdir) return pid;
@@ -944,12 +960,12 @@ mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pproces
 	}
 
 	read_chars = GetModuleFileNameEx(hProcess, NULL, *pprocess_path, MEM_PATH_MAX);
-	//CloseHandle(hProcess);
+	CloseHandle(hProcess);
 
 #	elif MEM_OS == MEM_LINUX
 	char path[64] = { 0 };
 	snprintf(path, sizeof(path), "/proc/%i/exe", pid);
-	*pprocess_path = malloc(MEM_PATH_MAX * sizeof(mem_tchar_t));
+	*pprocess_path = (mem_tstring_t)malloc(MEM_PATH_MAX * sizeof(mem_tchar_t));
 	if (!*pprocess_path) return read_chars;
 	readlink(path, *pprocess_path, MEM_PATH_MAX * sizeof(mem_tchar_t));
 
@@ -959,7 +975,7 @@ mem_size_t         mem_ex_get_process_path(mem_pid_t pid, mem_tstring_t* pproces
 	return read_chars;
 }
 
-mem_arch_t         mem_ex_get_system_arch()
+mem_arch_t         mem_ex_get_system_arch(mem_void_t)
 {
 	/*
 	 * Description:
@@ -968,11 +984,11 @@ mem_arch_t         mem_ex_get_system_arch()
 	 *
 	 * Return Value:
 	 *   Returns the architecture of
-	 *   the system or 'ArchUnknown'
+	 *   the system or 'MEM_ARCH_UNKNOWN'
 	 *   on error
 	 */
 
-	mem_arch_t arch = ArchUnknown;
+	mem_arch_t arch = MEM_ARCH_UNKNOWN;
 
 #	if   MEM_OS == MEM_WIN
 	SYSTEM_INFO sys_info = { 0 };
@@ -980,10 +996,10 @@ mem_arch_t         mem_ex_get_system_arch()
 	switch (sys_info.wProcessorArchitecture)
 	{
 	case PROCESSOR_ARCHITECTURE_INTEL:
-		arch = x86_32;
+		arch = MEM_ARCH_x86_32;
 		break;
 	case PROCESSOR_ARCHITECTURE_AMD64:
-		arch = x86_64;
+		arch = MEM_ARCH_x86_64;
 		break;
 	default:
 		break;
@@ -994,9 +1010,9 @@ mem_arch_t         mem_ex_get_system_arch()
 	struct utsname utsbuf = { 0 };
 	if (uname(&utsbuf) != 0) return arch;
 
-	if      (!MEM_STR_CMP(utsbuf.machine, "x86_32")) arch = x86_32;
-	else if (!MEM_STR_CMP(utsbuf.machine, "x86_64")) arch = x86_64;
-	else                                             arch = ArchUnknown;
+	if      (!MEM_STR_CMP(utsbuf.machine, "x86_32")) arch = MEM_ARCH_x86_32;
+	else if (!MEM_STR_CMP(utsbuf.machine, "x86_64")) arch = MEM_ARCH_x86_64;
+	else                                             arch = MEM_ARCH_UNKNOWN;
 
 #	endif
 
@@ -1012,32 +1028,32 @@ mem_arch_t         mem_ex_get_arch(mem_pid_t pid)
 	 *
 	 * Return Value:
 	 *   Returns the architecture of
-	 *   the process or 'ArchUnknown'
+	 *   the process or 'MEM_ARCH_UNKNOWN'
 	 *   on error
 	 */
 
-	mem_arch_t arch = ArchUnknown;
+	mem_arch_t arch = MEM_ARCH_UNKNOWN;
 #	if   MEM_OS == MEM_WIN
 
 	BOOL IsWow64 = FALSE;
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return arch;
 	BOOL Check = IsWow64Process(hProcess, &IsWow64);
-	//CloseHandle(hProcess);
+	CloseHandle(hProcess);
 	if (!Check) return arch;
 
 	mem_arch_t sys_arch = mem_ex_get_system_arch();
 
 	switch (mem_in_get_arch())
 	{
-	case x86_32:
-		if (sys_arch == x86_32)
-			arch = x86_32;
-		else if (sys_arch == x86_64 && !IsWow64)
-			arch = x86_64;
-	case x86_64:
-		if (IsWow64) arch = x86_32;
-		else arch = x86_64;
+	case MEM_ARCH_x86_32:
+		if (sys_arch == MEM_ARCH_x86_32)
+			arch = MEM_ARCH_x86_32;
+		else if (sys_arch == MEM_ARCH_x86_64 && !IsWow64)
+			arch = MEM_ARCH_x86_64;
+	case MEM_ARCH_x86_64:
+		if (IsWow64) arch = MEM_ARCH_x86_32;
+		else arch = MEM_ARCH_x86_64;
 		break;
 	}
 
@@ -1116,7 +1132,7 @@ mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
 
 		}
 	}
-	//CloseHandle(hSnap);
+	CloseHandle(hSnap);
 #	elif MEM_OS == MEM_LINUX
 	DIR* pdir = opendir("/proc");
 	if (!pdir)
@@ -1132,7 +1148,7 @@ mem_size_t         mem_ex_get_process_list(mem_process_t** pprocess_list)
 		if (id != (mem_pid_t)-1)
 		{
 			mem_process_t* holder = *pprocess_list;
-			*pprocess_list = malloc((count + 1) * sizeof(mem_process_t));
+			*pprocess_list = (mem_process_t*)malloc((count + 1) * sizeof(mem_process_t));
 			if (!*pprocess_list)
 			{
 				count = 0;
@@ -1210,7 +1226,7 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 	int read_check = 0;
 	for (mem_tchar_t c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
 	{
-		mem_tchar_t* holder = malloc((maps_size + 2) * sizeof(mem_tchar_t));
+		mem_tchar_t* holder = (mem_tchar_t*)malloc((maps_size + 2) * sizeof(mem_tchar_t));
 		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
 		free(maps_buffer);
 		maps_buffer = holder;
@@ -1272,12 +1288,12 @@ mem_module_t       mem_ex_get_module(mem_process_t process, mem_tstring_t module
 
 	switch (process.arch)
 	{
-	case x86_32:
+	case MEM_ARCH_x86_32:
 		mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
 		mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
 		mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
 		break;
-	case x86_64:
+	case MEM_ARCH_x86_64:
 		mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
 		mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
 		mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
@@ -1362,7 +1378,6 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 	mem_size_t read_chars = 0;
 
 #	if   MEM_OS == MEM_WIN
-	HMODULE hModule = (HMODULE)INVALID_HANDLE_VALUE;
 	
 	HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, process.pid);
 	if (hSnap != INVALID_HANDLE_VALUE)
@@ -1393,11 +1408,11 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 
 	switch (process.arch)
 	{
-	case x86_32:
+	case MEM_ARCH_x86_32:
 		snprintf(page_base_str, sizeof(page_base_str), "%x-", (mem_uint32_t)(mem_uintptr_t)mod.base);
 		break;
-	case x86_64:
-		snprintf(page_base_str, sizeof(page_base_str), (MEM_ARCH == x86_32 ? "%llx-" : "%lx-"), (mem_uint64_t)(mem_uintptr_t)mod.base);
+	case MEM_ARCH_x86_64:
+		snprintf(page_base_str, sizeof(page_base_str), (MEM_ARCH == MEM_ARCH_x86_32 ? "%llx-" : "%lx-"), (mem_uint64_t)(mem_uintptr_t)mod.base);
 		break;
 	default:
 		return read_chars;
@@ -1414,7 +1429,7 @@ mem_size_t         mem_ex_get_module_path(mem_process_t process, mem_module_t mo
 	int read_check = 0;
 	for (mem_tchar_t c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
 	{
-		mem_tchar_t* holder = malloc((maps_size + 2) * sizeof(mem_tchar_t));
+		mem_tchar_t* holder = (mem_tchar_t*)malloc((maps_size + 2) * sizeof(mem_tchar_t));
 		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
 		free(maps_buffer);
 		maps_buffer = holder;
@@ -1526,7 +1541,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 	int read_check = 0;
 	for (mem_tchar_t c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
 	{
-		mem_tchar_t* holder = malloc((maps_size + 2) * sizeof(mem_tchar_t));
+		mem_tchar_t* holder = (mem_tchar_t*)malloc((maps_size + 2) * sizeof(mem_tchar_t));
 		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
 		free(maps_buffer);
 		maps_buffer = holder;
@@ -1604,12 +1619,12 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 
 		switch (process.arch)
 		{
-		case x86_32:
+		case MEM_ARCH_x86_32:
 			mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_base_str, NULL, 16);
 			mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoul(module_end_str, NULL, 16);
 			mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
 			break;
-		case x86_64:
+		case MEM_ARCH_x86_64:
 			mod.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_base_str, NULL, 16);
 			mod.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(module_end_str, NULL, 16);
 			mod.size = (mem_uintptr_t)mod.end - (mem_uintptr_t)mod.base;
@@ -1620,7 +1635,7 @@ mem_size_t         mem_ex_get_module_list(mem_process_t process, mem_module_t** 
 		}
 
 		mem_module_t* list_holder = *pmodule_list;
-		*pmodule_list = malloc((count + 1) * sizeof(mem_module_t));
+		*pmodule_list = (mem_module_t*)malloc((count + 1) * sizeof(mem_module_t));
 		if (!*pmodule_list)
 		{
 			count = 0;
@@ -1665,7 +1680,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return page;
 	MEMORY_BASIC_INFORMATION mbi = { 0 };
 	VirtualQueryEx(hProcess, src, &mbi, sizeof(mbi));
-	//CloseHandle(hProcess);
+	CloseHandle(hProcess);
 	page.base = mbi.BaseAddress;
 	page.size = mbi.RegionSize;
 	page.end = (mem_voidptr_t)((mem_uintptr_t)page.base + page.size);
@@ -1682,11 +1697,11 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 
 	switch (process.arch)
 	{
-	case x86_32:
+	case MEM_ARCH_x86_32:
 		snprintf(page_base_str, sizeof(page_base_str), "%x-", (mem_uint32_t)(mem_uintptr_t)src);
 		break;
-	case x86_64:
-		snprintf(page_base_str, sizeof(page_base_str), (MEM_ARCH == x86_32 ? "%llx-" : "%lx-"), (mem_uint64_t)(mem_uintptr_t)src);
+	case MEM_ARCH_x86_64:
+		snprintf(page_base_str, sizeof(page_base_str), (MEM_ARCH == MEM_ARCH_x86_32 ? "%llx-" : "%lx-"), (mem_uint64_t)(mem_uintptr_t)src);
 		break;
 	default:
 		return page;
@@ -1703,7 +1718,7 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 	int read_check = 0;
 	for (mem_tchar_t c = 0; (read_check = read(maps_file, &c, 1)) > 0; maps_size++)
 	{
-		mem_tchar_t* holder = malloc((maps_size + 2) * sizeof(mem_tchar_t));
+		mem_tchar_t* holder = (mem_tchar_t*)malloc((maps_size + 2) * sizeof(mem_tchar_t));
 		memcpy(holder, maps_buffer, maps_size * sizeof(mem_tchar_t));
 		free(maps_buffer);
 		maps_buffer = holder;
@@ -1770,12 +1785,12 @@ mem_page_t         mem_ex_get_page(mem_process_t process, mem_voidptr_t src)
 
 	switch (process.arch)
 	{
-	case x86_32:
+	case MEM_ARCH_x86_32:
 		page.base = (mem_voidptr_t)(mem_uintptr_t)strtoul(page_base_addr, NULL, 16);
 		page.end  = (mem_voidptr_t)(mem_uintptr_t)strtoul(page_end_addr, NULL, 16);
 		page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
 		break;
-	case x86_64:
+	case MEM_ARCH_x86_64:
 		page.base = (mem_voidptr_t)(mem_uintptr_t)strtoull(page_base_addr, NULL, 16);
 		page.end = (mem_voidptr_t)(mem_uintptr_t)strtoull(page_end_addr, NULL, 16);
 		page.size = (mem_uintptr_t)page.end - (mem_uintptr_t)page.base;
@@ -1810,7 +1825,7 @@ mem_bool_t         mem_ex_is_process_running(mem_process_t process)
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	DWORD ExitCode = 0;
 	GetExitCodeProcess(hProcess, &ExitCode);
-	//CloseHandle(hProcess);
+	CloseHandle(hProcess);
 	ret = ExitCode == STILL_ACTIVE ? MEM_TRUE : MEM_FALSE;
 #	elif MEM_OS == MEM_LINUX
 	struct stat sb;
@@ -1841,7 +1856,7 @@ mem_bool_t         mem_ex_read(mem_process_t process, mem_voidptr_t src, mem_voi
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	ret = ReadProcessMemory(hProcess, (LPCVOID)src, (LPVOID)dst, (SIZE_T)size, NULL) != 0 ? MEM_TRUE : MEM_FALSE;
-	//CloseHandle(hProcess);
+	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	struct iovec iosrc = { 0 };
 	struct iovec iodst = { 0 };
@@ -1873,7 +1888,7 @@ mem_bool_t         mem_ex_write(mem_process_t process, mem_voidptr_t dst, mem_vo
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	ret = WriteProcessMemory(hProcess, dst, (LPCVOID)src, size, NULL) != 0 ? MEM_TRUE : MEM_FALSE;
-	//CloseHandle(hProcess);
+	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	struct iovec iosrc = { 0 };
 	struct iovec iodst = { 0 };
@@ -1936,11 +1951,11 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 
 	switch (process.arch)
 	{
-	case x86_32:
-		injection_buf = g_mem_payloads[DetourInvalid + 1]; //x86_32 SYSCALL
+	case MEM_ARCH_x86_32:
+		injection_buf = g_mem_payloads[MEM_ASM_x86_SYSCALL32];
 		break;
-	case x86_64:
-		injection_buf = g_mem_payloads[DetourInvalid + 2]; //x86_64 SYSCALL
+	case MEM_ARCH_x86_64:
+		injection_buf = g_mem_payloads[MEM_ASM_x86_SYSCALL64];
 		break;
 	default:
 		return ret;
@@ -1954,7 +1969,7 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	ptrace(PTRACE_GETREGS, process.pid, MEM_NULL, &old_regs);
 	regs = old_regs;
 
-#	if   MEM_ARCH == MEM_x86_32
+#	if   MEM_ARCH == _MEM_ARCH_x86_32
 	regs.eax = (mem_uintptr_t)syscall_n;
 	regs.ebx = (mem_uintptr_t)arg0;
 	regs.ecx = (mem_uintptr_t)arg1;
@@ -1963,7 +1978,7 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	regs.edi = (mem_uintptr_t)arg4;
 	regs.ebp = (mem_uintptr_t)arg5;
 	injection_addr = (mem_voidptr_t)regs.eip;
-#	elif MEM_ARCH == MEM_x86_64
+#	elif MEM_ARCH == _MEM_ARCH_x86_64
 	regs.rax = (mem_uintptr_t)syscall_n;
 	regs.rdi = (mem_uintptr_t)arg0;
 	regs.rsi = (mem_uintptr_t)arg1;
@@ -1981,9 +1996,9 @@ mem_voidptr_t      mem_ex_syscall(mem_process_t process, mem_int_t syscall_n, me
 	ptrace(PTRACE_SINGLESTEP, process.pid, NULL, NULL);
 	waitpid(process.pid, &status, WSTOPPED);
 	ptrace(PTRACE_GETREGS, process.pid, NULL, &regs);
-#   if   MEM_ARCH == MEM_x86_32
+#   if   MEM_ARCH == _MEM_ARCH_x86_32
 	ret = (mem_voidptr_t)regs.eax;
-#   elif MEM_ARCH == MEM_x86_64
+#   elif MEM_ARCH == _MEM_ARCH_x86_64
 	ret = (mem_voidptr_t)regs.rax;
 #   endif
 
@@ -2019,7 +2034,7 @@ mem_bool_t         mem_ex_protect(mem_process_t process, mem_voidptr_t src, mem_
 	DWORD old_prot = 0;
 	ret = VirtualProtectEx(hProcess, src, size, protection, &old_prot) != 0 ? MEM_TRUE : MEM_FALSE;
 	if (old_protection) *old_protection = old_prot;
-	//CloseHandle(hProcess);
+	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	if (old_protection)
 	{
@@ -2053,16 +2068,16 @@ mem_voidptr_t      mem_ex_allocate(mem_process_t process, mem_size_t size, mem_p
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return alloc;
 	alloc = (mem_voidptr_t)VirtualAllocEx(hProcess, NULL, size, MEM_COMMIT | MEM_RESERVE, protection);
 	if (!alloc) alloc = (mem_voidptr_t)MEM_BAD;
-	//CloseHandle(hProcess);
+	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	mem_int_t syscall_n = -1;
 	switch (process.arch)
 	{
-	case x86_32:
+	case MEM_ARCH_x86_32:
 		//syscall_n = __NR_mmap2;
 		syscall_n = 192;
 		break;
-	case x86_64:
+	case MEM_ARCH_x86_64:
 		//syscall_n = __NR_mmap;
 		syscall_n = 9;
 		break;
@@ -2095,7 +2110,7 @@ mem_bool_t         mem_ex_deallocate(mem_process_t process, mem_voidptr_t src, m
 	HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, process.pid);
 	if (!hProcess || hProcess == INVALID_HANDLE_VALUE) return ret;
 	ret = VirtualFreeEx(hProcess, src, 0, MEM_RELEASE) != 0 ? MEM_TRUE : MEM_FALSE;
-	//CloseHandle(hProcess);
+	CloseHandle(hProcess);
 #	elif MEM_OS == MEM_LINUX
 	ret = mem_ex_syscall(process, __NR_munmap, src, (mem_voidptr_t)size, NULL, NULL, NULL, NULL) != (mem_voidptr_t)MAP_FAILED ? MEM_TRUE : MEM_FALSE;
 #	endif
@@ -2223,22 +2238,25 @@ mem_module_t       mem_ex_load_module(mem_process_t process, mem_tstring_t path)
 		return mod;
 	}
 
-	HANDLE hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, NULL, (LPTHREAD_START_ROUTINE)LoadLibrary, path_buffer_ex, NULL, NULL);
+	HANDLE hThread = (HANDLE)CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)LoadLibrary, path_buffer_ex, 0, NULL);
 	if(!hThread)
 	{
 		mem_ex_deallocate(process, path_buffer_ex, path_size);
 		return mod;
 	}
 
-	WaitForSingleObject(hThread, -1);
-	//CloseHandle(hThread);
-	//CloseHandle(hProcess);
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
+	CloseHandle(hProcess);
 
 	mem_ex_deallocate(process, path_buffer_ex, path_size);
 
 	mod = mem_ex_get_module(process, path);
 
 #	elif MEM_OS == MEM_LINUX
+
+
+
 #	endif
 
 	return mod;
@@ -2277,12 +2295,12 @@ mem_voidptr_t      mem_ex_get_symbol(mem_process_t process, mem_module_t mod, me
 	 *   or 'MEM_BAD' on error
 	 */
 
-	mem_voidptr_t sym = (mem_voidptr_t)MEM_BAD;
+	mem_voidptr_t addr = (mem_voidptr_t)MEM_BAD;
 #	if   MEM_OS == MEM_WIN
 #	elif MEM_OS == MEM_LINUX
-
-	return sym;
 #	endif
+
+	return addr;
 }
 
 #endif //MEM_COMPATIBLE

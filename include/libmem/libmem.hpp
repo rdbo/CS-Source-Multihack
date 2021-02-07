@@ -20,9 +20,9 @@ namespace mem
 {
 	namespace in
 	{
-		inline mem_pid_t                    get_pid() { return mem_in_get_pid(); }
+		inline mem_pid_t                    get_pid(mem_void_t) { return mem_in_get_pid(); }
 		inline mem_size_t                   get_process_name(mem_tstring_t* pprocess_name) { return mem_in_get_process_name(pprocess_name); }
-		inline mem_string_t                 get_process_name()
+		inline mem_string_t                 get_process_name(mem_void_t)
 		{
 			mem_tstring_t process_name = (mem_tstring_t)NULL;
 			size_t read_chars = mem_in_get_process_name(&process_name);
@@ -30,15 +30,15 @@ namespace mem
 			return str;
 		}
 		inline mem_size_t                   get_process_path(mem_tstring_t* pprocess_path) { return mem_in_get_process_path(pprocess_path); }
-		inline mem_string_t                 get_process_path()
+		inline mem_string_t                 get_process_path(mem_void_t)
 		{
 			mem_tstring_t process_path = (mem_tstring_t)NULL;
 			size_t read_chars = mem_in_get_process_path(&process_path);
 			mem_string_t  str = (read_chars ? process_path : MEM_STR(""));
 			return str;
 		}
-		inline mem_arch_t                   get_arch() { return mem_in_get_arch(); }
-		inline mem_process_t                get_process() { return mem_in_get_process(); }
+		inline mem_arch_t                   get_arch(mem_void_t) { return mem_in_get_arch(); }
+		inline mem_process_t                get_process(mem_void_t) { return mem_in_get_process(); }
 		inline mem_module_t                 get_module(mem_tstring_t module_ref) { return mem_in_get_module(module_ref); }
 		inline mem_module_t                 get_module(mem_string_t module_ref)  { return mem_in_get_module((mem_tstring_t)module_ref.c_str()); }
 		inline mem_size_t                   get_module_name(mem_module_t mod, mem_tstring_t* pmodule_name) { return mem_in_get_module_name(mod, pmodule_name); }
@@ -58,7 +58,7 @@ namespace mem
 			return str;
 		}
 		inline mem_size_t                   get_module_list(mem_module_t** pmodule_list) { return mem_in_get_module_list(pmodule_list); }
-		inline std::vector<mem_module_t>    get_module_list()
+		inline std::vector<mem_module_t>    get_module_list(mem_void_t)
 		{
 			mem_module_t* module_list = (mem_module_t*)NULL;
 			size_t size = mem_in_get_module_list(&module_list);
@@ -86,9 +86,10 @@ namespace mem
 		inline mem_voidptr_t                pattern_scan(mem_data_t pattern, mem_string_t mask, mem_voidptr_t start, mem_voidptr_t stop) { return mem_in_pattern_scan(pattern, (mem_tstring_t)mask.c_str(), start, stop); }
 		inline mem_voidptr_t                pattern_scan(mem_data_t pattern, mem_string_t mask, mem_module_t mod) { return mem_in_pattern_scan(pattern, (mem_tstring_t)mask.c_str(), mod.base, mod.end); }
 		inline mem_voidptr_t                pattern_scan(mem_data_t pattern, mem_string_t mask, mem_page_t page) { return mem_in_pattern_scan(pattern, (mem_tstring_t)mask.c_str(), page.base, page.end); }
-		inline mem_size_t                   detour_size(mem_detour_t method) { return mem_in_detour_size(method); }
-		inline mem_bool_t                   detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method = x86_JMP64, mem_data_t* stolen_bytes = (mem_data_t*)NULL) { return mem_in_detour(src, dst, size, method, stolen_bytes); }
-		inline mem_voidptr_t                detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_detour_t method = x86_JMP64, mem_data_t* stolen_bytes = (mem_data_t*)NULL) { return mem_in_detour_trampoline(src, dst, size, method, stolen_bytes); }
+		inline mem_size_t                   detour_size(mem_asm_t method) { return mem_in_detour_size(method); }
+		inline mem_size_t                   payload_size(mem_asm_t method) { return mem_in_payload_size(method); }
+		inline mem_bool_t                   detour(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method = MEM_ASM_x86_JMP64, mem_data_t* stolen_bytes = (mem_data_t*)NULL) { return mem_in_detour(src, dst, size, method, stolen_bytes); }
+		inline mem_voidptr_t                detour_trampoline(mem_voidptr_t src, mem_voidptr_t dst, mem_size_t size, mem_asm_t method = MEM_ASM_x86_JMP64, mem_data_t* stolen_bytes = (mem_data_t*)NULL) { return mem_in_detour_trampoline(src, dst, size, method, stolen_bytes); }
 		inline mem_bool_t                   detour_restore(mem_voidptr_t src, mem_data_t stolen_bytes, mem_size_t size) { return mem_in_detour_restore(src, stolen_bytes, size); }
 		inline mem_module_t                 load_module(mem_tstring_t path) { return mem_in_load_module(path); }
 		inline mem_module_t                 load_module(mem_string_t path) { return mem_in_load_module((mem_tstring_t)path.c_str()); }
@@ -127,11 +128,11 @@ namespace mem
 			mem_pid_t pid = process.pid;
 			return mem::ex::get_process_path(pid);
 		}
-		inline mem_arch_t                   get_system_arch() { return mem_ex_get_system_arch(); }
+		inline mem_arch_t                   get_system_arch(mem_void_t) { return mem_ex_get_system_arch(); }
 		inline mem_arch_t                   get_arch(mem_pid_t pid) { return mem_ex_get_arch(pid); }
 		inline mem_process_t                get_process(mem_pid_t pid) { return mem_ex_get_process(pid); }
 		inline mem_size_t                   get_process_list(mem_process_t** pprocess_list) { return mem_ex_get_process_list(pprocess_list); }
-		inline std::vector<mem_process_t>   get_process_list()
+		inline std::vector<mem_process_t>   get_process_list(mem_void_t)
 		{
 			mem_process_t* process_list = (mem_process_t*)NULL;
 			size_t size = mem_ex_get_process_list(&process_list);

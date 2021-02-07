@@ -26,7 +26,7 @@ HookManager::~HookManager()
 	}
 }
 
-mem_bool_t    HookManager::Hook(mem_voidptr_t Source, mem_voidptr_t Dest, mem_size_t Size, mem_detour_t Method)
+mem_bool_t    HookManager::Hook(mem_voidptr_t Source, mem_voidptr_t Dest, mem_size_t Size, mem_asm_t Method)
 {
 	mem_data_t StolenBytes = nullptr;
 	if (mem::in::detour(Source, Dest, Size, Method, &StolenBytes))
@@ -45,12 +45,12 @@ mem_bool_t    HookManager::Hook(mem_voidptr_t Source, mem_voidptr_t Dest, mem_si
 	return MEM_FALSE;
 }
 
-mem_bool_t    HookManager::Hook(mem_uintptr_t Offset, mem_voidptr_t Dest, mem_size_t Size, mem_detour_t Method)
+mem_bool_t    HookManager::Hook(mem_uintptr_t Offset, mem_voidptr_t Dest, mem_size_t Size, mem_asm_t Method)
 {
 	return this->Hook((mem_voidptr_t)GET_OFFSET(this->BaseAddress, Offset), Dest, Size, Method);
 }
 
-mem_bool_t    HookManager::HookTrampoline(mem_voidptr_t Source, mem_voidptr_t Dest, mem_size_t Size, mem_detour_t Method)
+mem_bool_t    HookManager::HookTrampoline(mem_voidptr_t Source, mem_voidptr_t Dest, mem_size_t Size, mem_asm_t Method)
 {
 	mem_voidptr_t Trampoline = (mem_voidptr_t)MEM_BAD;
 	mem_data_t    StolenBytes = nullptr;
@@ -74,7 +74,7 @@ mem_bool_t    HookManager::HookTrampoline(mem_voidptr_t Source, mem_voidptr_t De
 	return MEM_FALSE;
 }
 
-mem_bool_t    HookManager::HookTrampoline(mem_uintptr_t Offset, mem_voidptr_t Dest, mem_size_t Size, mem_detour_t Method)
+mem_bool_t    HookManager::HookTrampoline(mem_uintptr_t Offset, mem_voidptr_t Dest, mem_size_t Size, mem_asm_t Method)
 {
 	return this->HookTrampoline((mem_voidptr_t)GET_OFFSET(this->BaseAddress, Offset), Dest, Size, Method);
 }

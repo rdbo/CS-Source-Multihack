@@ -59,14 +59,21 @@ void Base::Shutdown()
 {
 	if (Data::IsLoaded)
 	{
-		Data::d3d9_hook->RestoreAll();
 		if (Data::window && Data::oWndProc)
 			SetWindowLongPtr(Data::window->GetHandle(), GWL_WNDPROC, (LONG)Data::oWndProc);
+
+		ImGui_ImplWin32_Shutdown();
+		ImGui_ImplDX9_Shutdown();
+
+		Data::d3d9_hook->RestoreAll();
+		Data::ClientModeVMT->RestoreOriginal();
+
 		Data::IsLoaded = false;
 	}
 }
 
 void Base::Unload()
 {
+	Base::Shutdown();
 	CreateThread(nullptr, 0, ExitThread, NULL, 0, nullptr);
 }
